@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PE AI Transformation — Force Field</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue-50: #E6F1FB; --blue-200: #85B7EB; --blue-400: #378ADD;
+    --blue-600: #185FA5; --blue-800: #0C447C; --blue-900: #042C53;
+    --teal-50: #E1F5EE; --teal-200: #5DCAA5; --teal-400: #1D9E75;
+    --teal-600: #0F6E56; --teal-800: #085041; --teal-900: #04342C;
+    --amber-50: #FAEEDA; --amber-200: #EF9F27; --amber-400: #BA7517;
+    --amber-600: #854F0B; --amber-800: #633806;
+    --coral-50: #FAECE7; --coral-400: #D85A30; --coral-600: #993C1D;
+    --gray-50: #F7F6F2; --gray-100: #EEECEA; --gray-200: #D3D1C7;
+    --gray-400: #888780; --gray-600: #5F5E5A; --gray-800: #2C2C2A;
+    --surface: #FAFAF8;
+    --card: #FFFFFF;
+    --text-primary: #1A1A18;
+    --text-secondary: #5F5E5A;
+    --text-tertiary: #888780;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .page-header {
+    max-width: 900px;
+    margin: 0 auto 48px;
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 10px;
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -.02em;
+    color: var(--text-primary);
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+
+  .page-sub {
+    font-size: 14px;
+    color: var(--text-secondary);
+    max-width: 520px;
+    line-height: 1.65;
+  }
+
+  /* Period selector */
+  .period-bar {
+    max-width: 900px;
+    margin: 0 auto 32px;
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--card);
+  }
+
+  .period-btn {
+    flex: 1;
+    padding: 12px 10px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-tertiary);
+    transition: all .2s;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .period-btn:last-child { border-right: none; }
+
+  .period-btn .period-num {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .04em;
+    color: var(--text-tertiary);
+    margin-bottom: 3px;
+  }
+
+  .period-btn .period-name {
+    display: block;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .period-btn.active {
+    background: var(--gray-800);
+  }
+
+  .period-btn.active .period-num,
+  .period-btn.active .period-name {
+    color: rgba(255,255,255,0.9);
+  }
+
+  .period-btn.active .period-num {
+    color: rgba(255,255,255,0.55);
+  }
+
+  /* Balance label */
+  .balance-strip {
+    max-width: 900px;
+    margin: 0 auto 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .balance-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background .3s;
+  }
+
+  .balance-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* Main grid */
+  .force-grid {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    gap: 0;
+    align-items: start;
+  }
+
+  /* Column headers */
+  .col-header {
+    border-radius: 8px 8px 0 0;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .col-header.board {
+    background: var(--blue-900);
+    color: rgba(255,255,255,0.9);
+  }
+
+  .col-header.org {
+    background: var(--teal-800);
+    color: rgba(255,255,255,0.9);
+  }
+
+  /* Force cards */
+  .force-col { display: flex; flex-direction: column; gap: 2px; }
+
+  .force-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background .15s;
+    position: relative;
+  }
+
+  .force-col .force-card:last-child {
+    border-radius: 0 0 8px 8px;
+  }
+
+  .force-card:hover { background: var(--gray-50); }
+
+  .force-card.active.board-card {
+    background: var(--blue-50);
+    border-left: 3px solid var(--blue-600);
+  }
+
+  .force-card.active.org-card {
+    background: var(--teal-50);
+    border-left: 3px solid var(--teal-600);
+  }
+
+  .force-card-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .force-card-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    line-height: 1.5;
+  }
+
+  .force-weight {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    margin-top: 5px;
+    letter-spacing: .02em;
+  }
+
+  .force-weight.board { color: var(--blue-600); }
+  .force-weight.org { color: var(--teal-600); }
+
+  /* Weight bar inside card */
+  .weight-bar-track {
+    height: 2px;
+    background: var(--gray-100);
+    border-radius: 1px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .weight-bar-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width .4s cubic-bezier(.4,0,.2,1);
+  }
+
+  .board-card .weight-bar-fill { background: var(--blue-400); }
+  .org-card .weight-bar-fill { background: var(--teal-400); }
+
+  /* Center tension column */
+  .center-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 44px;
+    gap: 0;
+  }
+
+  .tension-track {
+    width: 10px;
+    height: 260px;
+    border-radius: 5px;
+    background: var(--gray-100);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tension-fill-board {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--blue-400);
+    border-radius: 5px 5px 0 0;
+    transition: height .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .tension-fill-org {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--teal-400);
+    border-radius: 0 0 5px 5px;
+    transition: height .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  .ceo-node {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-200);
+    background: var(--card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-family: 'DM Mono', monospace;
+    margin: 10px 0;
+    transition: border-color .4s, color .4s;
+    letter-spacing: .02em;
+  }
+
+  /* Detail panel */
+  .detail-panel {
+    max-width: 900px;
+    margin: 16px auto 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 120px;
+  }
+
+  .detail-empty {
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .detail-empty-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    flex-shrink: 0;
+  }
+
+  .detail-empty-text {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .detail-content { display: none; }
+  .detail-content.visible { display: block; }
+
+  .detail-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .detail-header-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .detail-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .detail-body {
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .detail-section {
+    background: var(--card);
+    padding: 14px 16px;
+  }
+
+  .detail-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .detail-section-label.manifests { color: var(--blue-600); }
+  .detail-section-label.cost { color: var(--coral-600); }
+  .detail-section-label.shift { color: var(--teal-600); }
+
+  .detail-section-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* Footer */
+  .page-footer {
+    max-width: 900px;
+    margin: 40px auto 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-brand {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    letter-spacing: .04em;
+  }
+
+  .footer-note {
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  /* Legend */
+  .legend {
+    max-width: 900px;
+    margin: 0 auto 20px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .force-grid { grid-template-columns: 1fr 48px 1fr; }
+    .detail-body { grid-template-columns: 1fr; }
+    .center-col { padding-top: 44px; }
+    .tension-track { height: 220px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="eyebrow">ETJ Life · CEO Operating System</div>
+  <h1 class="page-title">The PE force field</h1>
+  <p class="page-sub">Every PE-backed CEO operates between two opposing pressure systems. Board velocity demands push for speed and measurable ROI. Organizational absorption capacity pulls toward stability. The CEO absorbs both — alone.</p>
+</div>
+
+<div class="period-bar" role="tablist">
+  <button class="period-btn active" onclick="setPeriod(0)" role="tab">
+    <span class="period-num">Phase 1</span>
+    <span class="period-name">Post-close</span>
+    <span style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;display:block">Year 1</span>
+  </button>
+  <button class="period-btn" onclick="setPeriod(1)" role="tab">
+    <span class="period-num">Phase 2</span>
+    <span class="period-name">Value creation</span>
+    <span style="font-size:10px;color:var(--text-tertiary);margin-top:2px;display:block">Years 1–3</span>
+  </button>
+  <button class="period-btn" onclick="setPeriod(2)" role="tab">
+    <span class="period-num">Phase 3</span>
+    <span class="period-name">Scale</span>
+    <span style="font-size:10px;color:var(--text-tertiary);margin-top:2px;display:block">Years 3–5</span>
+  </button>
+  <button class="period-btn" onclick="setPeriod(3)" role="tab">
+    <span class="period-num">Phase 4</span>
+    <span class="period-name">Exit prep</span>
+    <span style="font-size:10px;color:var(--text-tertiary);margin-top:2px;display:block">Years 4–6</span>
+  </button>
+</div>
+
+<div class="balance-strip">
+  <div class="balance-dot" id="balance-dot"></div>
+  <span class="balance-text" id="balance-text">Org readiness is the binding constraint. Board pressure is moderate — the CEO has room to sequence.</span>
+</div>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:var(--blue-400);"></div>
+    Board pressure intensity
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:var(--teal-400);"></div>
+    Org resistance intensity
+  </div>
+  <div class="legend-item" style="margin-left:auto;">
+    <span style="font-size:11px;color:var(--text-tertiary);">Click any force card to open deep read</span>
+  </div>
+</div>
+
+<div class="force-grid">
+
+  <!-- Board column -->
+  <div>
+    <div class="col-header board">PE board pressure</div>
+    <div class="force-col" id="board-col">
+      <div class="force-card board-card" onclick="showDetail('board',0)">
+        <div class="force-card-title">Hold period clock</div>
+        <div class="force-card-sub">4–7 yr window compresses every decision</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="bb0"></div></div>
+        <div class="force-weight board" id="bw0"></div>
+      </div>
+      <div class="force-card board-card" onclick="showDetail('board',1)">
+        <div class="force-card-title">EBITDA mandate</div>
+        <div class="force-card-sub">Margin improvement must show in reporting</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="bb1"></div></div>
+        <div class="force-weight board" id="bw1"></div>
+      </div>
+      <div class="force-card board-card" onclick="showDetail('board',2)">
+        <div class="force-card-title">Exit multiple thesis</div>
+        <div class="force-card-sub">AI story must hold for next buyer</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="bb2"></div></div>
+        <div class="force-weight board" id="bw2"></div>
+      </div>
+      <div class="force-card board-card" onclick="showDetail('board',3)">
+        <div class="force-card-title">Quarterly visibility</div>
+        <div class="force-card-sub">Board wants proof points every 90 days</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="bb3"></div></div>
+        <div class="force-weight board" id="bw3"></div>
+      </div>
+      <div class="force-card board-card" onclick="showDetail('board',4)">
+        <div class="force-card-title">Portco benchmarking</div>
+        <div class="force-card-sub">CEO compared across portfolio</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="bb4"></div></div>
+        <div class="force-weight board" id="bw4"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center tension track -->
+  <div class="center-col">
+    <div class="tension-track">
+      <div class="tension-fill-board" id="board-bar"></div>
+      <div class="tension-fill-org" id="org-bar"></div>
+    </div>
+    <div class="ceo-node" id="ceo-node">CEO</div>
+  </div>
+
+  <!-- Org column -->
+  <div>
+    <div class="col-header org">Org absorption limits</div>
+    <div class="force-col" id="org-col">
+      <div class="force-card org-card" onclick="showDetail('org',0)">
+        <div class="force-card-title">Change saturation</div>
+        <div class="force-card-sub">Teams absorb only so much disruption</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="ob0"></div></div>
+        <div class="force-weight org" id="ow0"></div>
+      </div>
+      <div class="force-card org-card" onclick="showDetail('org',1)">
+        <div class="force-card-title">Data fragmentation</div>
+        <div class="force-card-sub">AI can't run on siloed, unclean data</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="ob1"></div></div>
+        <div class="force-weight org" id="ow1"></div>
+      </div>
+      <div class="force-card org-card" onclick="showDetail('org',2)">
+        <div class="force-card-title">Skill gap</div>
+        <div class="force-card-sub">Mid-mgmt lacks AI fluency to execute</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="ob2"></div></div>
+        <div class="force-weight org" id="ow2"></div>
+      </div>
+      <div class="force-card org-card" onclick="showDetail('org',3)">
+        <div class="force-card-title">Culture inertia</div>
+        <div class="force-card-sub">"How we do things" resists AI authority</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="ob3"></div></div>
+        <div class="force-weight org" id="ow3"></div>
+      </div>
+      <div class="force-card org-card" onclick="showDetail('org',4)">
+        <div class="force-card-title">Trust deficit</div>
+        <div class="force-card-sub">Team doesn't yet trust AI outputs</div>
+        <div class="weight-bar-track"><div class="weight-bar-fill" id="ob4"></div></div>
+        <div class="force-weight org" id="ow4"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-empty" id="detail-empty">
+    <div class="detail-empty-dot"></div>
+    <span class="detail-empty-text">Select any force card above to open the deep read — how it manifests, what it costs the CEO, and what shifts it.</span>
+  </div>
+  <div class="detail-content" id="detail-content">
+    <div class="detail-header">
+      <div class="detail-header-dot" id="detail-dot"></div>
+      <div class="detail-title" id="detail-title"></div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <div class="detail-section-label manifests">How it manifests</div>
+        <div class="detail-section-text" id="detail-manifests"></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-label cost">CEO cost</div>
+        <div class="detail-section-text" id="detail-cost"></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-label shift">What shifts it</div>
+        <div class="detail-section-text" id="detail-shift"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-footer">
+  <span class="footer-brand">ETJ LIFE · CEO OPERATING SYSTEM</span>
+  <span class="footer-note">Click period tabs to see how force balance shifts across the hold</span>
+</div>
+
+<script>
+const periods = [
+  {
+    bw: [3,2,1,2,1], ow: [3,4,3,2,3],
+    color: '#1D9E75',
+    label: 'Org readiness is the binding constraint. Board pressure is moderate — the CEO has room to sequence.'
+  },
+  {
+    bw: [4,4,3,3,3], ow: [3,3,4,3,3],
+    color: '#EF9F27',
+    label: 'Pressure rising on both sides. The CEO is absorbing tension from board and org simultaneously — the compression is at its peak.'
+  },
+  {
+    bw: [4,5,4,4,4], ow: [2,2,3,2,2],
+    color: '#D85A30',
+    label: 'Board dominates. Org has adapted — but CEO identity and judgment are now under structural pressure.'
+  },
+  {
+    bw: [3,4,5,3,4], ow: [2,2,2,2,2],
+    color: '#993C1D',
+    label: 'Exit thesis drives everything. Org friction is low but the succession question is present — the CEO senses it before the board names it.'
+  }
+];
+
+const boardDetails = [
+  {
+    title: 'Hold period clock',
+    manifests: 'The compressed timeline creates a fundamental bias: fast imperfect beats slow thorough. CEOs internalize this and make AI deployment decisions that build technical debt because the clock demands visible progress.',
+    cost: 'The CEO carries the weight of knowing that speed-biased decisions will compound into structural problems — but has no political cover to slow down. The tension is held alone.',
+    shift: 'Surfacing the sequencing tradeoff explicitly in the board narrative. Reframing Phase 1 as "data readiness" — positioning infrastructure work as a value creation lever with a credible milestone timeline.'
+  },
+  {
+    title: 'EBITDA mandate',
+    manifests: 'Projects that show EBITDA improvement within 2 quarters get funded. Projects that create compound value over 3 years get deferred. This systematically underweights data infrastructure and org capability work.',
+    cost: 'The CEO who optimizes for EBITDA optics in year 1 limits their options in year 3. They know this. The board doesn\'t. That asymmetry is isolating.',
+    shift: 'Building a dual narrative: quick wins that satisfy the board\'s short-term signal, while tracking a separate set of leading indicators that show the long-cycle investments taking root.'
+  },
+  {
+    title: 'Exit multiple thesis',
+    manifests: 'The board needs "AI-enabled business" to be credible in the CIM. The CEO must produce not just AI results but AI artifacts — documented use cases, measurable impact, a leadership team that can articulate the strategy.',
+    cost: 'Dual accountability: deploy AI that works, and narrate AI that sounds good to sophisticated buyers. These two imperatives occasionally conflict, and the CEO manages the gap silently.',
+    shift: 'Treating the exit narrative as a parallel workstream from year 2. The CEO who builds the exit story progressively has far more control over the framing than the one who reconstructs it under pressure in year 4.'
+  },
+  {
+    title: 'Quarterly visibility',
+    manifests: '90-day cycles force AI investment into short horizons. A CEO who says "we\'re doing the infrastructure work that enables AI in 18 months" gets difficult board questions. Pressure is toward deployable, demonstrable AI.',
+    cost: 'The CEO manages quarterly optics while running longer-horizon bets quietly. That dual accounting — what we show versus what we\'re actually building — is cognitively and politically draining.',
+    shift: 'Designing quarterly milestones that are genuinely meaningful rather than performative. A board that trusts the CEO\'s judgment asks fewer short-term questions.'
+  },
+  {
+    title: 'Portco benchmarking',
+    manifests: '"Company X has AI in 5 functions already" creates implicit performance pressure. CEOs often accelerate deployment into areas where the org isn\'t ready, generating adoption failures that then require cleanup.',
+    cost: 'Being compared to peers who may have different starting conditions, different board dynamics, and different organizational readiness — with no ability to contextualize the comparison in the moment it\'s made.',
+    shift: 'Proactively establishing context: not "we\'re behind" but "here\'s the specific operating condition we\'re working in and why our sequencing is deliberate." Credible framing neutralizes unfavorable comparisons.'
+  }
+];
+
+const orgDetails = [
+  {
+    title: 'Change saturation',
+    manifests: 'Organizations have a finite rate of change absorption. PE-backed companies enter the hold period already in disruption — new ownership, new reporting, new leadership. Layering aggressive AI on top creates cognitive overload at the manager level.',
+    cost: 'The CEO gets the blame for low adoption rates without visibility into why they\'re low. "We just need better change management" is the typical diagnosis. It\'s usually wrong.',
+    shift: 'Mapping org absorption capacity explicitly before deployment. Concentrating AI in the 2–3 functions with the highest readiness, building internal proof points that create belief before expanding.'
+  },
+  {
+    title: 'Data fragmentation',
+    manifests: 'Most PE-backed mid-market companies have ERP systems that don\'t talk to CRM, finance data in spreadsheets, ops data in legacy systems. The gap between "we have data" and "our data is AI-ready" is typically 6–18 months of work.',
+    cost: 'The CEO discovers this post-close and absorbs the gap in silence. Admitting "our data isn\'t ready" feels politically dangerous — it implicates the original deal thesis.',
+    shift: 'Surfacing the data gap early and explicitly. Reframing Phase 1 infrastructure investment as a value creation lever with a clear timeline — boards accept this framing when it comes with milestones.'
+  },
+  {
+    title: 'Skill gap',
+    manifests: 'Mid-management is where AI transformation sticks or dies. The gap is typically in operations managers and functional leads — who lack literacy to evaluate AI outputs, manage AI-augmented teams, or distinguish good recommendations from bad.',
+    cost: 'The CEO is caught between "train everyone" (slow, expensive) and "just push through" (creates adoption theater). Neither option fully works. The right answer — targeted deep capability in a few functions first — requires patience the board rarely grants.',
+    shift: 'Identifying the 3–5 managers who are AI-curious and giving them disproportionate support. Internal champions who visibly succeed with AI do more to shift the skill gap than any training program.'
+  },
+  {
+    title: 'Culture inertia',
+    manifests: '"We go with gut on pricing." "We trust the rep\'s relationship read over a model\'s churn prediction." Culture is the accumulated weight of how decisions have always been made. AI asks people to cede authority to systems — and that ask lands differently depending on identity and tenure.',
+    cost: 'The CEO who treats this as a training problem misses it entirely. Culture change requires different interventions than skill building — and is far slower. The board doesn\'t see the difference.',
+    shift: 'Starting in functions where the culture is least attached to the old decision model. Early wins build internal legitimacy that makes culture shift possible in harder domains.'
+  },
+  {
+    title: 'Trust deficit',
+    manifests: 'AI systems need to earn trust through demonstrated accuracy over time. In early deployment, teams encounter errors. Without a framework for evaluating those errors, one visible failure can reset months of adoption progress.',
+    cost: 'The CEO is accountable for adoption rates on tools that haven\'t yet earned organizational trust — and has limited tools to accelerate that earning process. Trust is time-dependent, not effort-dependent.',
+    shift: 'Building psychological safety around AI mistakes. The CEO who explicitly says "we expect errors in year one — here\'s how we evaluate them" creates a learning culture that accelerates trust far faster than pretending the errors don\'t happen.'
+  }
+];
+
+const weightLabels = ['Low','Moderate','High','Very high','Critical'];
+let curPeriod = 0;
+let curDetail = null;
+
+function setPeriod(n) {
+  curPeriod = n;
+  document.querySelectorAll('.period-btn').forEach((b,i) => {
+    b.classList.toggle('active', i === n);
+    const yearSpan = b.querySelector('span:last-child');
+    if (i === n) {
+      yearSpan.style.color = 'rgba(255,255,255,0.5)';
+    } else {
+      yearSpan.style.color = 'var(--text-tertiary)';
+    }
+  });
+
+  const p = periods[n];
+  const bSum = p.bw.reduce((a,b) => a+b, 0);
+  const oSum = p.ow.reduce((a,b) => a+b, 0);
+  const total = bSum + oSum;
+
+  document.getElementById('board-bar').style.height = Math.round((bSum/total) * 260) + 'px';
+  document.getElementById('org-bar').style.height = Math.round((oSum/total) * 260) + 'px';
+
+  const ceo = document.getElementById('ceo-node');
+  ceo.style.borderColor = p.color;
+  ceo.style.color = p.color;
+
+  document.getElementById('balance-dot').style.background = p.color;
+  document.getElementById('balance-text').textContent = p.label;
+
+  p.bw.forEach((w,i) => {
+    document.getElementById('bw'+i).textContent = weightLabels[w-1];
+    document.getElementById('bb'+i).style.width = Math.round((w/5)*100) + '%';
+  });
+  p.ow.forEach((w,i) => {
+    document.getElementById('ow'+i).textContent = weightLabels[w-1];
+    document.getElementById('ob'+i).style.width = Math.round((w/5)*100) + '%';
+  });
+
+  if (curDetail) showDetail(curDetail.side, curDetail.idx);
+}
+
+function showDetail(side, idx) {
+  curDetail = { side, idx };
+
+  document.querySelectorAll('.force-card').forEach(c => c.classList.remove('active'));
+  const cards = document.querySelectorAll('.' + side + '-card');
+  if (cards[idx]) cards[idx].classList.add('active');
+
+  const d = side === 'board' ? boardDetails[idx] : orgDetails[idx];
+  const dotColor = side === 'board' ? 'var(--blue-600)' : 'var(--teal-600)';
+
+  document.getElementById('detail-empty').style.display = 'none';
+  const dc = document.getElementById('detail-content');
+  dc.classList.add('visible');
+
+  document.getElementById('detail-dot').style.background = dotColor;
+  document.getElementById('detail-title').textContent = d.title;
+  document.getElementById('detail-manifests').textContent = d.manifests;
+  document.getElementById('detail-cost').textContent = d.cost;
+  document.getElementById('detail-shift').textContent = d.shift;
+}
+
+setPeriod(0);
+</script>
+</body>
+</html>
